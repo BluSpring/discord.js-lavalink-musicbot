@@ -1,0 +1,10 @@
+[00:39:28] [WebsocketSelector25] [SocketServer] Caught exception in websocket
+java.net.BindException: Address already in use: bind
+	at sun.nio.ch.Net.bind0(Native Method)
+	at sun.nio.ch.Net.bind(Unknown Source)
+	at sun.nio.ch.Net.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketChannelImpl.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketAdaptor.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketAdaptor.bind(Unknown Source)
+	at org.java_websocket.server.WebSocketServer.run(WebSocketServer.java:315)
+	at java.lang.Thread.run(Unknown Source)

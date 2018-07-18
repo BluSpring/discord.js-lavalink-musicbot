@@ -1,0 +1,94 @@
+[16:42:01] [ INFO ] [Launcher] Starting Launcher on Blu-PC with PID 3676 (D:\Bots\TwitchBot (original by Konomi) JS Attempt\Lavalink\Lavalink.jar started by FBKBotRDP in D:\Bots\TwitchBot (original by Konomi) JS Attempt\Lavalink)
+[16:42:03] [ INFO ] [Launcher] No active profile set, falling back to default profiles: default
+[16:42:18] [ INFO ] [AnnotationConfigServletWebServerApplicationContext] Refreshing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@32d992b2: startup date [Wed Jun 06 16:42:18 SGT 2018]; root of context hierarchy
+[16:42:52] [ INFO ] [TomcatWebServer] Tomcat initialized with port(s): 2333 (http)
+[16:42:58] [ INFO ] [Http11NioProtocol] Initializing ProtocolHandler ["http-nio-127.0.0.1-2333"]
+[16:42:59] [ INFO ] [StandardService] Starting service [Tomcat]
+[16:42:59] [ INFO ] [StandardEngine] Starting Servlet Engine: Apache Tomcat/8.5.28
+[16:43:02] [ INFO ] [AprLifecycleListener] The APR based Apache Tomcat Native library which allows optimal performance in production environments was not found on the java.library.path: [C:\ProgramData\Oracle\Java\javapath;C:\Windows\Sun\Java\bin;C:\Windows\system32;C:\Windows;C:\Program Files\Common Files\Microsoft Shared\Windows Live;C:\Program Files (x86)\Common Files\Microsoft Shared\Windows Live;C:\ProgramData\Oracle\Java\javapath;D:\ffmpeg\bin;D:\GitHub\Bots\TattleBlooky\ffmpeg\bin;D:\Python\Python36-32\Scripts\;D:\Python\Python36-32\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Users\Blu\AppData\Roaming\npm;C:\Program Files\nodejs\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files (x86)\Windows Live\Shared;C:\Program Files\Git\cmd;.]
+[16:43:04] [ INFO ] [[/]] Initializing Spring embedded WebApplicationContext
+[16:43:04] [ INFO ] [ContextLoader] Root WebApplicationContext: initialization completed in 45769 ms
+[16:43:07] [ INFO ] [ServletRegistrationBean] Servlet dispatcherServlet mapped to [/]
+[16:43:07] [ INFO ] [FilterRegistrationBean] Mapping filter: 'characterEncodingFilter' to: [/*]
+[16:43:07] [ INFO ] [FilterRegistrationBean] Mapping filter: 'hiddenHttpMethodFilter' to: [/*]
+[16:43:07] [ INFO ] [FilterRegistrationBean] Mapping filter: 'httpPutFormContentFilter' to: [/*]
+[16:43:07] [ INFO ] [FilterRegistrationBean] Mapping filter: 'requestContextFilter' to: [/*]
+[16:43:16] [ INFO ] [GarbageCollectionMonitor] GC monitoring enabled, reporting results every 2 minutes.
+[16:43:16] [ INFO ] [AudioSendFactoryConfiguration] OS: Windows 7, Arch: amd64
+[16:43:16] [ INFO ] [AudioSendFactoryConfiguration] JDA-NAS supported system detected. Enabled native audio sending.
+[16:43:16] [ INFO ] [AudioSendFactoryConfiguration] Setting buffer to 400ms
+[16:43:16] [ INFO ] [AudioSendFactoryConfiguration] Setting playlist load limit to 600
+[16:43:17] [ INFO ] [Launcher] No sentry dsn found, turning off sentry.
+[16:43:17] [ ERROR] [SocketServer] Caught exception in websocket
+java.net.BindException: Address already in use: bind
+	at sun.nio.ch.Net.bind0(Native Method)
+	at sun.nio.ch.Net.bind(Unknown Source)
+	at sun.nio.ch.Net.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketChannelImpl.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketAdaptor.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketAdaptor.bind(Unknown Source)
+	at org.java_websocket.server.WebSocketServer.run(WebSocketServer.java:315)
+	at java.lang.Thread.run(Unknown Source)
+[16:43:30] [ INFO ] [RequestMappingHandlerAdapter] Looking for @ControllerAdvice: org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@32d992b2: startup date [Wed Jun 06 16:42:18 SGT 2018]; root of context hierarchy
+[16:43:32] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/loadtracks],methods=[GET],produces=[application/json]}" onto public java.lang.String lavalink.server.player.AudioLoaderRestHandler.getLoadTracks(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,java.lang.String) throws java.io.IOException,java.lang.InterruptedException
+[16:43:32] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/decodetrack],methods=[GET],produces=[application/json]}" onto public java.lang.String lavalink.server.player.AudioLoaderRestHandler.getDecodeTrack(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,java.lang.String) throws java.io.IOException
+[16:43:32] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/decodetracks],methods=[POST],consumes=[application/json],produces=[application/json]}" onto public java.lang.String lavalink.server.player.AudioLoaderRestHandler.postDecodeTracks(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,java.lang.String) throws java.io.IOException
+[16:43:32] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/debug/nashorn],methods=[POST]}" onto public java.lang.String lavalink.server.util.DebugRestHandler.getLoadTracks(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,java.lang.String,java.lang.String)
+[16:43:32] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/error]}" onto public org.springframework.http.ResponseEntity<java.util.Map<java.lang.String, java.lang.Object>> org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController.error(javax.servlet.http.HttpServletRequest)
+[16:43:32] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/error],produces=[text/html]}" onto public org.springframework.web.servlet.ModelAndView org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController.errorHtml(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)
+[16:43:33] [ INFO ] [SimpleUrlHandlerMapping] Mapped URL path [/webjars/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+[16:43:33] [ INFO ] [SimpleUrlHandlerMapping] Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+[16:43:35] [ INFO ] [SimpleUrlHandlerMapping] Mapped URL path [/**/favicon.ico] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+[16:43:38] [ INFO ] [AnnotationMBeanExporter] Registering beans for JMX exposure on startup
+[16:43:39] [ INFO ] [Http11NioProtocol] Starting ProtocolHandler ["http-nio-127.0.0.1-2333"]
+[16:43:39] [ INFO ] [NioSelectorPool] Using a shared selector for servlet write/read
+[16:43:40] [ INFO ] [TomcatWebServer] Tomcat started on port(s): 2333 (http) with context path ''
+[16:43:40] [ INFO ] [Launcher] Started Launcher in 131.693 seconds (JVM running for 174.865)
+[16:45:16] [ WARN ] [GarbageCollectionMonitor] Suspicious GC results for the last 2 minutes: [Bucket 0 = 0] [Bucket 20 = 0] [Bucket 50 = 0] [Bucket 200 = 2] [Bucket 500 = 0] [Bucket 2000 = 0] 
+[22:42:33] [ INFO ] [Launcher] Starting Launcher on Blu-PC with PID 1804 (D:\Bots\TwitchBot (original by Konomi) JS Attempt\Lavalink\Lavalink.jar started by FBKBotRDP in D:\Bots\TwitchBot (original by Konomi) JS Attempt\Lavalink)
+[22:42:33] [ INFO ] [Launcher] No active profile set, falling back to default profiles: default
+[22:42:37] [ INFO ] [AnnotationConfigServletWebServerApplicationContext] Refreshing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@1810399e: startup date [Wed Jun 06 22:42:37 SGT 2018]; root of context hierarchy
+[22:43:00] [ INFO ] [TomcatWebServer] Tomcat initialized with port(s): 2333 (http)
+[22:43:01] [ INFO ] [Http11NioProtocol] Initializing ProtocolHandler ["http-nio-127.0.0.1-2333"]
+[22:43:01] [ INFO ] [StandardService] Starting service [Tomcat]
+[22:43:01] [ INFO ] [StandardEngine] Starting Servlet Engine: Apache Tomcat/8.5.28
+[22:43:01] [ INFO ] [AprLifecycleListener] The APR based Apache Tomcat Native library which allows optimal performance in production environments was not found on the java.library.path: [C:\ProgramData\Oracle\Java\javapath;C:\Windows\Sun\Java\bin;C:\Windows\system32;C:\Windows;C:\Program Files\Common Files\Microsoft Shared\Windows Live;C:\Program Files (x86)\Common Files\Microsoft Shared\Windows Live;C:\ProgramData\Oracle\Java\javapath;D:\ffmpeg\bin;D:\GitHub\Bots\TattleBlooky\ffmpeg\bin;D:\Python\Python36-32\Scripts\;D:\Python\Python36-32\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Users\Blu\AppData\Roaming\npm;C:\Program Files\nodejs\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files (x86)\Windows Live\Shared;C:\Program Files\Git\cmd;.]
+[22:43:04] [ INFO ] [[/]] Initializing Spring embedded WebApplicationContext
+[22:43:04] [ INFO ] [ContextLoader] Root WebApplicationContext: initialization completed in 27098 ms
+[22:43:07] [ INFO ] [ServletRegistrationBean] Servlet dispatcherServlet mapped to [/]
+[22:43:07] [ INFO ] [FilterRegistrationBean] Mapping filter: 'characterEncodingFilter' to: [/*]
+[22:43:07] [ INFO ] [FilterRegistrationBean] Mapping filter: 'hiddenHttpMethodFilter' to: [/*]
+[22:43:07] [ INFO ] [FilterRegistrationBean] Mapping filter: 'httpPutFormContentFilter' to: [/*]
+[22:43:07] [ INFO ] [FilterRegistrationBean] Mapping filter: 'requestContextFilter' to: [/*]
+[22:43:14] [ INFO ] [GarbageCollectionMonitor] GC monitoring enabled, reporting results every 2 minutes.
+[22:43:14] [ INFO ] [AudioSendFactoryConfiguration] OS: Windows 7, Arch: amd64
+[22:43:14] [ INFO ] [AudioSendFactoryConfiguration] JDA-NAS supported system detected. Enabled native audio sending.
+[22:43:14] [ INFO ] [AudioSendFactoryConfiguration] Setting buffer to 400ms
+[22:43:14] [ INFO ] [AudioSendFactoryConfiguration] Setting playlist load limit to 600
+[22:43:15] [ INFO ] [Launcher] No sentry dsn found, turning off sentry.
+[22:43:16] [ ERROR] [SocketServer] Caught exception in websocket
+java.net.BindException: Address already in use: bind
+	at sun.nio.ch.Net.bind0(Native Method)
+	at sun.nio.ch.Net.bind(Unknown Source)
+	at sun.nio.ch.Net.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketChannelImpl.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketAdaptor.bind(Unknown Source)
+	at sun.nio.ch.ServerSocketAdaptor.bind(Unknown Source)
+	at org.java_websocket.server.WebSocketServer.run(WebSocketServer.java:315)
+	at java.lang.Thread.run(Unknown Source)
+[22:43:25] [ INFO ] [RequestMappingHandlerAdapter] Looking for @ControllerAdvice: org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@1810399e: startup date [Wed Jun 06 22:42:37 SGT 2018]; root of context hierarchy
+[22:43:31] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/loadtracks],methods=[GET],produces=[application/json]}" onto public java.lang.String lavalink.server.player.AudioLoaderRestHandler.getLoadTracks(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,java.lang.String) throws java.io.IOException,java.lang.InterruptedException
+[22:43:31] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/decodetrack],methods=[GET],produces=[application/json]}" onto public java.lang.String lavalink.server.player.AudioLoaderRestHandler.getDecodeTrack(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,java.lang.String) throws java.io.IOException
+[22:43:31] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/decodetracks],methods=[POST],consumes=[application/json],produces=[application/json]}" onto public java.lang.String lavalink.server.player.AudioLoaderRestHandler.postDecodeTracks(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,java.lang.String) throws java.io.IOException
+[22:43:31] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/debug/nashorn],methods=[POST]}" onto public java.lang.String lavalink.server.util.DebugRestHandler.getLoadTracks(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,java.lang.String,java.lang.String)
+[22:43:31] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/error]}" onto public org.springframework.http.ResponseEntity<java.util.Map<java.lang.String, java.lang.Object>> org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController.error(javax.servlet.http.HttpServletRequest)
+[22:43:31] [ INFO ] [RequestMappingHandlerMapping] Mapped "{[/error],produces=[text/html]}" onto public org.springframework.web.servlet.ModelAndView org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController.errorHtml(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)
+[22:43:33] [ INFO ] [SimpleUrlHandlerMapping] Mapped URL path [/webjars/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+[22:43:33] [ INFO ] [SimpleUrlHandlerMapping] Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+[22:43:36] [ INFO ] [SimpleUrlHandlerMapping] Mapped URL path [/**/favicon.ico] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+[22:43:39] [ INFO ] [AnnotationMBeanExporter] Registering beans for JMX exposure on startup
+[22:43:40] [ INFO ] [Http11NioProtocol] Starting ProtocolHandler ["http-nio-127.0.0.1-2333"]
+[22:43:41] [ INFO ] [NioSelectorPool] Using a shared selector for servlet write/read
+[22:43:41] [ INFO ] [TomcatWebServer] Tomcat started on port(s): 2333 (http) with context path ''
+[22:43:41] [ INFO ] [Launcher] Started Launcher in 79.494 seconds (JVM running for 95.06)
+[22:45:14] [ WARN ] [GarbageCollectionMonitor] Suspicious GC results for the last 2 minutes: [Bucket 0 = 0] [Bucket 20 = 0] [Bucket 50 = 2] [Bucket 200 = 0] [Bucket 500 = 0] [Bucket 2000 = 0] 

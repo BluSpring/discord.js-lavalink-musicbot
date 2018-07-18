@@ -1,0 +1,33 @@
+{
+  "name": "discord.js-lavalink-musicbot",
+  "version": "0.0.1",
+  "description": "A discord.js music bot module based on DarkoPendragon and nexu-dev's discord.js-musicbot-addon module, except using Lavalink.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BluSpring/discord.js-lavalink-musicbot.git"
+  },
+  "keywords": [
+    "musicbot",
+    "discord.js",
+    "discord",
+    "music",
+    "lavalink"
+  ],
+  "dependencies": {
+    "axios": "^0.18.0",
+    "discord.js": "^11.3.2",
+    "discord.js-lavalink": "^2.0.2",
+    "snekfetch": "^4.0.0",
+	"ytsearcher": "^1.0.3"
+  }
+  "author": "BluSpring",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BluSpring/discord.js-lavalink-musicbot/issues"
+  },
+  "homepage": "https://github.com/BluSpring/discord.js-lavalink-musicbot#readme"
+}
