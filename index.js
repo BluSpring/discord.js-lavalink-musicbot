@@ -17,9 +17,6 @@
 */
 
 const Discord = require('discord.js');
-const {
-  YTSearcher
-} = require('ytsearcher');
 const PACKAGE = require('./package.json');
 const Lavalink = require('discord.js-lavalink');
 const { PlayerManager } = Lavalink;
@@ -34,7 +31,6 @@ const defaultRegions = {
 module.exports = function (clientOriginal, options) {
 	class LavalinkMusic { // Construct everything?
 		constructor(clientOriginal, options) {
-			this.youtubeKey = (options && options.youtubeKey);
 			this.prefix = (options && options.prefix) || '!';
 			this.queues = {};
 			this.loops = {};
@@ -101,15 +97,6 @@ module.exports = function (clientOriginal, options) {
 			process.exit(1);
 		}
 		
-		if(!music.youtubeKey) {
-			console.log(new TypeError(`This may be a discord.js-lavalink musicbot addon, but searches require the youtubeKey.`));
-			process.exit(1);
-		}
-		
-		if(music.youtubeKey && typeof music.youtubeKey !== 'string') {
-			console.log(new TypeError(`"youtubeKey" must be a string`));
-			process.exit(1);
-		}
 		
 		if(typeof music.lavalink !== 'object') {
 			console.log(new TypeError(`"lavalink" options must be an object!`));
@@ -123,10 +110,6 @@ module.exports = function (clientOriginal, options) {
 	}
 	startBot();
 	
-	const searcher = new YTSearcher({
-		key: music.youtubeKey,
-		revealkey: true
-	});
 	
 	var bot = client;
 	
@@ -149,6 +132,10 @@ module.exports = function (clientOriginal, options) {
 					return music.stop(message, suffix);
 				case 'np':
 					return music.np(message, suffix);
+				case 'pause':
+					return music.pause(message, suffix);
+				case 'resume':
+					return music.resume(message, suffix);
 			}
 		}
 	})
@@ -171,6 +158,9 @@ module.exports = function (clientOriginal, options) {
 "${music.prefix}skip" - Skip a song!
 "${music.prefix}queue" - Displays the queue!
 "${music.prefix}stop" - Clears queue and stops the queue.
+"${music.prefix}np" - Check what's playing in the queue!
+"${music.prefix}pause" - Pauses the queue!
+"${music.prefix}resume" - Resumes the queue!
 		`)
 		.setAuthor(`${message.author.tag}`, message.author.avatarURL)
 		.setFooter(`Module: discord.js-lavalink-musicbot`)
@@ -191,7 +181,9 @@ module.exports = function (clientOriginal, options) {
             channel: message.member.voiceChannelID,
             host: music.getIdealHost(bot, message.guild.region)
         }, { selfdeaf: true });
-        if (!player) return message.channel.send("You need to be in a voice channel!")
+		if (!player) return message.channel.send("You need to be in a voice channel!")
+		
+		if(bot.player.get(message.guild.id).paused == true) music.resume(message, suffix);
 
 		if(['https://', 'http://'].some(crx => args.join(' ').includes(crx))) {
 			const queue = music.getQueue(message.guild.id);
@@ -208,27 +200,23 @@ module.exports = function (clientOriginal, options) {
 • **Length**: ${music.getYTLength(song.info.length)}
         `).setFooter(`Module: discord.js-lavalink-musicbot`)
 			message.channel.send(embed)
-			if(queue.length === 1) music.execQueue(bot, message, queue, player);
+			if(queue.length === 1) music.execQueue(message, queue, player);
 		} else {
-			searcher.search(args.join(" "), { type: 'video' }).then(async searchResult => {
-				if (!searchResult.totalResults || searchResult.totalResults === 0) return message.channel.send('Failed to get search results.');
-				const result = searchResult.first
-				const queue = music.getQueue(message.guild.id);
-				const [song] = await music.getSong(result.url);   
+			const queue = music.getQueue(message.guild.id);
+			const [song] = await music.getSong(`ytsearch:${args.join(' ')}`);   
 
-				queue.push(song);
-				const embed = new Discord.RichEmbed()
-				.setColor([255, 69, 0])
-				.setAuthor(`Play Command`, bot.user.avatarURL)
-				.setTitle('Added to queue!')
-				.setDescription(`• **Title**: ${song.info.title}
+			queue.push(song);
+			const embed = new Discord.RichEmbed()
+			.setColor([255, 69, 0])
+			.setAuthor(`Play Command`, bot.user.avatarURL)
+			.setTitle('Added to queue!')
+			.setDescription(`• **Title**: ${song.info.title}
 • **Author**: ${song.info.author}
 • **URL**: [${song.info.uri}](${song.info.uri})
 • **Length**: ${music.getYTLength(song.info.length)}
-				`).setFooter(`Module: discord.js-lavalink-musicbot`)
-				message.channel.send(embed)
-				if(queue.length === 1) music.execQueue(message, queue, player);
-			})
+			`).setFooter(`Module: discord.js-lavalink-musicbot`)
+			message.channel.send(embed)
+			if(queue.length === 1) music.execQueue(message, queue, player);
 		}
 	}
 	
@@ -265,7 +253,7 @@ module.exports = function (clientOriginal, options) {
 		return res.body;
 	}
 	
-	music.execQueue = (message, queue, player) => {
+	music.execQueue = (message, queue, player, type = 0) => {
 		player.play(queue[0].track); // Plays the first item in the queue.
 		const embed = new Discord.RichEmbed()
 				.setColor([255, 69, 0])
@@ -276,7 +264,7 @@ module.exports = function (clientOriginal, options) {
 • **URL**: [${queue[0].info.uri}](${queue[0].info.uri})
 • **Length**: ${music.getYTLength(queue[0].info.length)}
 				`).setFooter(`Module: discord.js-lavalink-musicbot`)
-		message.channel.send(embed)
+		message.channel.send(embed);
 
 		player.once("end", async data => {
 			if(queue.length > 1) { // So, if there's more than one item in the queue, play the new item.
@@ -322,15 +310,95 @@ module.exports = function (clientOriginal, options) {
 	
 	music.np = async (message, suffix) => {
 		try {
-			if(!bot.player) // This actually isn't how you do it. I don't know the proper way, don't judge me.
+			const player = bot.player.get(message.guild.id);
+			if(!player) // This actually isn't how you do it. I don't know the proper way, don't judge me.
 				return message.channel.send("Currently not playing anything.")
+
+
+			const queue = music.getQueue(message.guild.id);
 			
 			const embed = new Discord.RichEmbed()
-			.setColor('RANDOM')
-			.setTitle(`Hold on, unfinished.`)
-			message.channel.send(embed);
+				.setAuthor(`Music - Now Playing`, bot.user.avatarURL)
+				.setColor([255, 69, 0])
+				.setDescription(`• **Title**: ${queue[0].info.title}
+• **Author**: ${queue[0].info.author}
+• **URL**: [${queue[0].info.uri}](${queue[0].info.uri})
+• **Length**: ${music.getYTLength(queue[0].info.length)}
+				`).setFooter(`Module: discord.js-lavalink-musicbot`)
+		message.channel.send(embed);
 		} catch (err) {
 			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``)
+		}
+	}
+
+	music.pause = (message, suffix) => {
+		try {
+			const player = bot.player.get(message.guild.id);
+			if(!bot.player.get(message.guild.id))
+				return message.channel.send(`No music is being played in this guild.`)
+			player.pause(true);
+			message.channel.send(`Paused the player!`);
+		} catch (err) {
+			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``)
+		}
+	}
+
+	music.resume = (message, suffix) => {
+		try {
+			const player = bot.player.get(message.guild.id);
+			if(!bot.player.get(message.guild.id))
+				return message.channel.send(`No music is being played in this guild.`)
+			player.pause(false);
+			message.channel.send(`Resumed the player!`);
+		} catch (err) {
+			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``)
+		}
+	}
+
+	music.stop = (message, suffix) => {
+		try {
+			const queue = music.getQueue(message.guild.id);
+			const player = bot.player.get(message.guild.id);
+			if(!player)
+				return message.channel.send(`No music is playing in this guild!`);
+			
+			queue.splice(0, queue.length);
+			bot.player.leave(message.guild.id);
+
+			message.channel.send(`Left the voice channel.`);
+
+		} catch (err) {
+			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``)
+		}
+	}
+
+	music.queue = (message, suffix) => {
+		const queue = music.getQueue(message.guild.id);
+		if(!bot.player.get(message.guild.id))
+			return message.channel.send(`No music is being played in this guild.`)
+		const text = queue.map((video, index) => (
+			(index + 1) + ': ' + video.info.title + ` (**${music.getYTLength(video.info.length)}**)`
+		)).join('\n');
+		message.channel.send('Queue:\n' + text)
+	}
+
+	music.skip = (message, suffix) => {
+		try {
+			const args = message.content.split(' ').slice(1)
+			const player = bot.player.get(message.guild.id);
+			if(!player)
+				return message.channel.send(`No music playing!`);
+			const queue = music.getQueue(message.guild.id);
+			let sum = 1;
+			if(!isNaN(args) && parseInt(args.join(" ")) > 0) {
+				sum = parseInt(args.join(" "))
+			};
+			sum = Math.min(sum, queue.length);
+			queue.splice(0, sum);
+			message.channel.send(`Skipped ${sum} songs!`);
+			player.emit('end', message);
+		} catch (err) {
+			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``);
 		}
 	}
 }
