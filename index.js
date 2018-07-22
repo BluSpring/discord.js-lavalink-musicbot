@@ -46,6 +46,23 @@ module.exports = function (clientOriginal, options) {
 				],
 			};
 			this.token = (options && options.token);
+
+			// Commands
+
+			// List: mhelp, play, skip, queue, stop, np, pause, resume
+			// Yes I made that list for myself so I don't randomly forget the commands.
+			this.helpCmd = (options && options.helpCmd) || 'mhelp'; // M'helpy
+			this.playCmd = (options && options.playCmd) || 'play'; // Let's play around... Okay that's sexual, nvm
+			this.skipCmd = (options && options.skipCmd) || 'skip'; // Skip around.
+			this.queueCmd = (options && options.queueCmd) || 'queue'; // Queue me in line for your loooove- That is still sexual...
+			this.stopCmd = (options && options.stopCmd) || 'stop'; // IT'S TIME TO STAHP
+			this.npCmd = (options && options.npCmd) || 'np'; // No problem
+			this.pauseCmd = (options && options.pauseCmd) || 'pause'; // Pause that! *moves the girl's boyfriend into the trash*
+			this.resumeCmd = (options && options.resumeCmd) || 'resume'; // Resume! Heeeey, gorgeous- *gets bitch slapped*
+			// Sorry for the puns btw
+
+
+			this.customGame = (options && options.customGame) || { name: '', type: 'PLAYING' };
 		}
 		
 	}
@@ -60,20 +77,18 @@ module.exports = function (clientOriginal, options) {
 
 			this.player = null;
 
-			this.once("ready", this._ready.bind(this));
-		}
-
-		_ready() {
-			this.player = new PlayerManager(this, music.lavalink.nodes, {
-				user: this.user.id,
-				shards: music.getShard()
-			});
 		}
 
 	}
 	
 	var client = new MusicClient();
 	client.login(music.token); // Relogin the bot just for the Lavalink thing.
+
+	async function returnErr(objName, objType) {
+		// Since I was getting fucking lazy, I decided to make this.
+		console.log(new TypeError(`"${objName}" must be equivelent to type "${objType}"`));
+		process.exit(1);
+	}
 	
 	async function startBot() { // Start the damn bot.
 		if (process.version.slice(1)
@@ -96,6 +111,36 @@ module.exports = function (clientOriginal, options) {
 			console.log(new TypeError(`"prefix" must be a string`));
 			process.exit(1);
 		}
+
+		if(typeof music.helpCmd !== 'string') {
+			console.log(new TypeError('"helpCmd" must be a string'));
+			process.exit(1);
+		}
+
+		// List: play, skip, queue, stop, np, pause, resume
+		// Another list.. Laziness 100%
+		if(typeof music.playCmd !== 'string') {
+			returnErr('playCmd', 'string');
+		}
+
+		if(typeof music.queueCmd !== 'string') {
+			returnErr('queueCmd', 'string');
+		}
+		if(typeof music.skipCmd !== 'string') {
+			returnErr('skipCmd', 'string');
+		}
+		if(typeof music.stopCmd !== 'string') {
+			returnErr('stopCmd', 'string');
+		}
+		if(typeof music.npCmd !== 'string') {
+			returnErr('npCmd', 'string');
+		}
+		if(typeof music.pauseCmd !== 'string') {
+			returnErr('pauseCmd', 'string');
+		}
+		if(typeof music.resumeCmd !== 'string') {
+			returnErr('resumeCmd', 'string');
+		}
 		
 		
 		if(typeof music.lavalink !== 'object') {
@@ -105,6 +150,29 @@ module.exports = function (clientOriginal, options) {
 		
 		if(!music.lavalink.restnode || !music.lavalink.nodes[0]) {
 			console.log(new TypeError(`You seem to be missing restnode or a node.`));
+			process.exit(1);
+		}
+
+		if(!music.token) {
+			console.log(new TypeError('You require to add the token!'));
+			process.exit(1);
+		}
+
+		if(typeof music.customGame !== 'object') {
+			returnErr('customGame', 'object');
+		}
+
+		if(typeof music.customGame.name !== 'string') {
+			returnErr('customGame.name', 'string');
+		}
+
+		if(typeof music.customGame.type !== 'string') {
+			returnErr('customGame.type', 'string');
+		}
+
+		const custo = music.customGame.type;
+		if(custo !== 'PLAYING' && custo !== 'STREAMING' && custo !== 'LISTENING' && custo !== 'WATCHING') {
+			console.log(new TypeError(`"customGame.type" must be "PLAYING", "STREAMING', "LISTENING" or "WATCHING"! And also must be all uppercase!`));
 			process.exit(1);
 		}
 	}
@@ -120,32 +188,42 @@ module.exports = function (clientOriginal, options) {
 		
 		if(msg.toLowerCase().startsWith(music.prefix.toLowerCase())) {
 			switch(command) { // I'm copy pasting code. I don't actually understand how this works.
-				case 'mhelp':
+				case music.helpCmd:
 					return music.help(message, suffix);
-				case 'play':
+				case music.playCmd:
 					return music.play(message, suffix);
-				case 'skip':
+				case music.skipCmd:
 					return music.skip(message, suffix);
-				case 'queue':
+				case music.queueCmd:
 					return music.queue(message, suffix);
-				case 'stop':
+				case music.stopCmd:
 					return music.stop(message, suffix);
-				case 'np':
+				case music.npCmd:
 					return music.np(message, suffix);
-				case 'pause':
+				case music.pauseCmd:
 					return music.pause(message, suffix);
-				case 'resume':
+				case music.resumeCmd:
 					return music.resume(message, suffix);
 			}
 		}
 	})
 	.on('ready', async () => { // Once the bot is ready, this starts.
+		client.player = new PlayerManager(client, music.lavalink.nodes, {
+			user: this.user.id,
+			shards: music.getShard()
+		});
 		console.log(`[LavalinkMusic] Running version ${PACKAGE.version}`);
 		console.log(`[LavalinkMusic] Running NodeJS ${process.version}`);
 		console.log(`[LavalinkMusic] Running Discord.JS ${Discord.version}`);
 		console.log(`[LavalinkMusic] Logged in as ${bot.user.tag} (ID ${bot.user.id})`);
 		console.log(`[LavalinkMusic] Listening to host ${music.lavalink.restnode.host} and port ${music.lavalink.restnode.port}`);
 		console.log(`[LavalinkMusic] Prefix: ${music.prefix}`);
+		if(music.customGame.type == 'STREAMING') {
+			client.user.setPresence({ game: { name: music.customGame.name, type: 'STREAMING', url: 'https://twitch.tv/monstercat'}});
+		} else {
+			if(music.customGame.name == '') return;
+			client.user.setPresence({ game: music.customGame });
+		}
 	})
 	
 	music.help = (message, suffix) => {
@@ -153,14 +231,14 @@ module.exports = function (clientOriginal, options) {
 		const embed = new Discord.RichEmbed()
 		.setColor("RANDOM")
 		.setTitle(`${bot.user.tag} music help`)
-		.setDescription(`"${music.prefix}mhelp" - Displays this message!
-"${music.prefix}play" - Adds a song to the queue and plays it!
-"${music.prefix}skip" - Skip a song!
-"${music.prefix}queue" - Displays the queue!
-"${music.prefix}stop" - Clears queue and stops the queue.
-"${music.prefix}np" - Check what's playing in the queue!
-"${music.prefix}pause" - Pauses the queue!
-"${music.prefix}resume" - Resumes the queue!
+		.setDescription(`"${music.prefix}${music.helpCmd}" - Displays this message!
+"${music.prefix}${music.playCmd}" - Adds a song to the queue and plays it!
+"${music.prefix}${music.skipCmd}" - Skip a song!
+"${music.prefix}${music.queueCmd}" - Displays the queue!
+"${music.prefix}${music.stopCmd}" - Clears queue and stops the queue.
+"${music.prefix}${music.npCmd}" - Check what's playing in the queue!
+"${music.prefix}${music.pauseCmd}" - Pauses the queue!
+"${music.prefix}${music.resumeCmd}" - Resumes the queue!
 		`)
 		.setAuthor(`${message.author.tag}`, message.author.avatarURL)
 		.setFooter(`Module: discord.js-lavalink-musicbot`)
@@ -300,7 +378,7 @@ module.exports = function (clientOriginal, options) {
 		return minutes + ":" + seconds;
 	}
 	
-	music.getShard = () => {
+	music.getShard = () => { // This should supposedly return the shard.
 		let shardin = Math.floor(clientOriginal.guilds.size / 2500);
 		if(!shardin || shardin == null || shardin == 0)
 			shardin = 1;
