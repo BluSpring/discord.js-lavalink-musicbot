@@ -97,7 +97,7 @@ module.exports = function (clientOriginal, options) {
 			process.exit(1);
 		}
 		
-		if(Discord.version.slice(1).split('.')[0] > 12) {
+		if(Discord.version.split('.')[0] > 12) {
 			console.log(new Error(`[LavalinkMusicBot] Discord.JS version 12 and above is currently unsupported! Please use an older version!`));
 			process.exit(1);
 		}
