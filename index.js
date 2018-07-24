@@ -209,7 +209,7 @@ module.exports = function (clientOriginal, options) {
 	})
 	.on('ready', async () => { // Once the bot is ready, this starts.
 		client.player = new PlayerManager(client, music.lavalink.nodes, {
-			user: this.user.id,
+			user: client.user.id,
 			shards: music.getShard()
 		});
 		console.log(`[LavalinkMusic] Running version ${PACKAGE.version}`);
