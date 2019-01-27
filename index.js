@@ -13,7 +13,7 @@
 	This module, like a lot of my code, has loads of notes to help you out!
 	
 	My GitHub: https://github.com/BluSpring
-	Support: https://discord.gg/xgBaPPE
+	Support: https://discord.gg/dNN4azK
 */
 
 const Discord = require('discord.js');
@@ -27,6 +27,8 @@ const defaultRegions = {
     eu: ["london", "frankfurt", "amsterdam", "russia", "eu-central", "eu-west"],
     us: ["us-central", "us-west", "us-east", "us-south", "brazil"]
 };
+
+let currentTrack = null;
 
 module.exports = function (clientOriginal, options) {
 	class LavalinkMusic { // Construct everything?
@@ -42,7 +44,7 @@ module.exports = function (clientOriginal, options) {
 					password: "b1nzyR8l1m1t5"
 				},
 				nodes: [
-					{ host: "localhost", port: 80, region: "asia", password: "b1nzyR8l1m1t5" }
+					{ host: "localhost", port: 2333, region: "asia", password: "b1nzyR8l1m1t5" }
 				],
 			};
 			this.token = (options && options.token);
@@ -59,10 +61,12 @@ module.exports = function (clientOriginal, options) {
 			this.npCmd = (options && options.npCmd) || 'np'; // No problem
 			this.pauseCmd = (options && options.pauseCmd) || 'pause'; // Pause that! *moves the girl's boyfriend into the trash*
 			this.resumeCmd = (options && options.resumeCmd) || 'resume'; // Resume! Heeeey, gorgeous- *gets bitch slapped*
+			this.volumeCmd = (options && options.volumeCmd) || 'volume'; // *EARRAPE*
 			// Sorry for the puns btw
 
 
 			this.customGame = (options && options.customGame) || { name: '', type: 'PLAYING' };
+			this.logging = (options && options.logging) || false;
 		}
 		
 	}
@@ -141,6 +145,10 @@ module.exports = function (clientOriginal, options) {
 		if(typeof music.resumeCmd !== 'string') {
 			returnErr('resumeCmd', 'string');
 		}
+
+		if(typeof music.volumeCmd !== 'string') {
+			returnErr('volumeCmd', 'string');
+		}
 		
 		
 		if(typeof music.lavalink !== 'object') {
@@ -148,7 +156,7 @@ module.exports = function (clientOriginal, options) {
 			process.exit(1);
 		}
 		
-		if(!music.lavalink.restnode || !music.lavalink.nodes[0]) {
+		if(!music.lavalink.restnode || music.lavalink.nodes.length == 0) {
 			console.log(new TypeError(`You seem to be missing restnode or a node.`));
 			process.exit(1);
 		}
@@ -185,26 +193,34 @@ module.exports = function (clientOriginal, options) {
 		const msg = message.content.trim();
 		const command = msg.substring(music.prefix.length).split(/[ \n]/)[0].toLowerCase().trim();
 		const suffix = msg.substring(music.prefix.length + command.length).trim();
+
+		try {
 		
-		if(msg.toLowerCase().startsWith(music.prefix.toLowerCase())) {
-			switch(command) { // I'm copy pasting code. I don't actually understand how this works.
-				case music.helpCmd:
-					return music.help(message, suffix);
-				case music.playCmd:
-					return music.play(message, suffix);
-				case music.skipCmd:
-					return music.skip(message, suffix);
-				case music.queueCmd:
-					return music.queue(message, suffix);
-				case music.stopCmd:
-					return music.stop(message, suffix);
-				case music.npCmd:
-					return music.np(message, suffix);
-				case music.pauseCmd:
-					return music.pause(message, suffix);
-				case music.resumeCmd:
-					return music.resume(message, suffix);
+			if(msg.toLowerCase().startsWith(music.prefix.toLowerCase())) {
+				switch(command) { // I'm copy pasting code. I don't actually understand how this works.
+					case music.helpCmd:
+						return music.help(message, suffix);
+					case music.playCmd:
+						return music.play(message, suffix);
+					case music.skipCmd:
+						return music.skip(message, suffix);
+					case music.queueCmd:
+						return music.queue(message, suffix);
+					case music.stopCmd:
+						return music.stop(message, suffix);
+					case music.npCmd:
+						return music.np(message, suffix);
+					case music.pauseCmd:
+						return music.pause(message, suffix);
+					case music.resumeCmd:
+						return music.resume(message, suffix);
+					case music.volumeCmd:
+						return music.volume(message, suffix);
+				}
 			}
+		} catch (err) {
+			message.channel.send(`Discovered an error: \`\`\`xl\n${err.stack}\`\`\``);
+			console.error(`Discovered error: ${err.stack}`);
 		}
 	})
 	.on('ready', async () => { // Once the bot is ready, this starts.
@@ -224,7 +240,12 @@ module.exports = function (clientOriginal, options) {
 			if(music.customGame.name == '') return;
 			client.user.setPresence({ game: music.customGame });
 		}
-	})
+	});
+
+	music.log = (message, type = 'INFO') => {
+		type = type.toUpperCase();
+		console.log(`[LavalinkMusic:${type}] ${message}`);
+	}
 	
 	music.help = (message, suffix) => {
 		// Yes. I use RichEmbed(). This is why Discord.JS v12 isn't supported.
@@ -239,6 +260,7 @@ module.exports = function (clientOriginal, options) {
 "${music.prefix}${music.npCmd}" - Check what's playing in the queue!
 "${music.prefix}${music.pauseCmd}" - Pauses the queue!
 "${music.prefix}${music.resumeCmd}" - Resumes the queue!
+"${music.prefix}${music.volumeCmd}" - Change the volume!
 		`)
 		.setAuthor(`${message.author.tag}`, message.author.avatarURL)
 		.setFooter(`Module: discord.js-lavalink-musicbot`)
@@ -265,35 +287,63 @@ module.exports = function (clientOriginal, options) {
 
 		if(['https://', 'http://'].some(crx => args.join(' ').includes(crx))) {
 			const queue = music.getQueue(message.guild.id);
-			const [song] = await music.getSong(args.join(' '))
-			queue.push(song);
-
-			const embed = new Discord.RichEmbed()
+			await music.getSong(args.join(' '))
+			.then(song => {
+			if(args.join(' ').includes('&list=')) {
+				const urlParams = new URLSearchParams(args.join(' '));
+				const myParam = urlParams.get('index');
+				
+				let cur = urlParams.get('index') || 1;
+				const embed = new Discord.RichEmbed()
 			.setColor([255, 69, 0])
 			.setAuthor(`Play Command`, bot.user.avatarURL)
 			.setTitle('Added to queue!')
-			.setDescription(`• **Title**: ${song.info.title}
-• **Author**: ${song.info.author}
-• **URL**: [${song.info.uri}](${song.info.uri})
-• **Length**: ${music.getYTLength(song.info.length)}
-        `).setFooter(`Module: discord.js-lavalink-musicbot`)
-			message.channel.send(embed)
-			if(queue.length === 1) music.execQueue(message, queue, player);
+			.setDescription(`• **Title**: ${song.tracks[cur - 1].info.title}
+• **Author**: ${song.tracks[cur - 1].info.author}
+• **URL**: [${song.tracks[cur - 1].info.uri}](${song.tracks[cur - 1].info.uri})
+• **Length**: ${music.getYTLength(song.tracks[cur - 1].info.length)}
+		`).setFooter(`Module: discord.js-lavalink-musicbot`)
+			message.channel.send(embed);
+				song.tracks.map(cr => {
+					if(song.tracks[cur - 1] == undefined || song.tracks[cur] == undefined)
+						return;
+					queue.push(song.tracks[cur - 1]);
+					music.log(`Added track "${song.tracks[cur - 1].info.title}" in server ${message.guild.name}`, 'ADDTRK-PLAYLIST');
+					cur++;
+				});
+
+			} else {
+				queue.push(song.tracks[0]);
+				const embed = new Discord.RichEmbed()
+				.setColor([255, 69, 0])
+				.setAuthor(`Play Command`, bot.user.avatarURL)
+				.setTitle('Added to queue!')
+				.setDescription(`• **Title**: ${song.tracks[0].info.title}
+	• **Author**: ${song.tracks[0].info.author}
+	• **URL**: [${song.tracks[0].info.uri}](${song.tracks[0].info.uri})
+	• **Length**: ${music.getYTLength(song.tracks[0].info.length)}
+			`).setFooter(`Module: discord.js-lavalink-musicbot`)
+				message.channel.send(embed);
+				music.log(`Added track "${song.tracks[0].info.title}" in server ${message.guild.name}`, 'ADDTRK');
+			}
+
+			if(queue[0].track !== currentTrack) music.execQueue(message, queue, player);
+		});
 		} else {
 			const queue = music.getQueue(message.guild.id);
-			const [song] = await music.getSong(`ytsearch:${args.join(' ')}`);   
-
-			queue.push(song);
+			const song = await music.getSong(`ytsearch:${args.join(' ')}`);
+			queue.push(song.tracks[0]);
 			const embed = new Discord.RichEmbed()
 			.setColor([255, 69, 0])
 			.setAuthor(`Play Command`, bot.user.avatarURL)
 			.setTitle('Added to queue!')
-			.setDescription(`• **Title**: ${song.info.title}
-• **Author**: ${song.info.author}
-• **URL**: [${song.info.uri}](${song.info.uri})
-• **Length**: ${music.getYTLength(song.info.length)}
+			.setDescription(`• **Title**: ${song.tracks[0].info.title}
+• **Author**: ${song.tracks[0].info.author}
+• **URL**: [${song.tracks[0].info.uri}](${song.tracks[0].info.uri})
+• **Length**: ${music.getYTLength(song.tracks[0].info.length)}
 			`).setFooter(`Module: discord.js-lavalink-musicbot`)
-			message.channel.send(embed)
+			message.channel.send(embed);
+			music.log(`Added track "${song.tracks[0].info.title}" in server ${message.guild.name}`, 'ADDTRK');
 			if(queue.length === 1) music.execQueue(message, queue, player);
 		}
 	}
@@ -331,7 +381,13 @@ module.exports = function (clientOriginal, options) {
 		return res.body;
 	}
 	
-	music.execQueue = (message, queue, player, type = 0) => {
+	music.execQueue = async (message, queue, player, type = 0) => {
+		//console.log(queue[0]);
+		if(queue[0] == undefined) {
+			message.channel.send(`Queue seems to be empty... Weird. Time to leave the VC!`);
+			await bot.player.leave(message.guild.id);
+			currentTrack = null;
+		} else {
 		player.play(queue[0].track); // Plays the first item in the queue.
 		const embed = new Discord.RichEmbed()
 				.setColor([255, 69, 0])
@@ -343,21 +399,23 @@ module.exports = function (clientOriginal, options) {
 • **Length**: ${music.getYTLength(queue[0].info.length)}
 				`).setFooter(`Module: discord.js-lavalink-musicbot`)
 		message.channel.send(embed);
+		currentTrack = queue[0].track;
 
 		player.once("end", async data => {
-			if(queue.length > 1) { // So, if there's more than one item in the queue, play the new item.
+			if(queue.length > 0) { // So, if there's more than one item in the queue, play the new item.
 				setTimeout(() => {
 					queue.shift(); // Switch songs.
-					music.execQueue(bot, message, queue, player);
+					music.execQueue(message, queue, player);
 				}, 1000) // Wait a second.	
 			} else { // If not, just stop the queue and leave.
 				queue.shift(); 
 				message.channel.send(`Queue is now empty! Leaving voice channel...`)
 				await bot.player.leave(message.guild.id);
+				currentTrack = null;
 			}
 		});
 	}
-	
+		}
 	music.getYTLength = (millisec) => {
     // Credit: https://stackoverflow.com/questions/19700283/how-to-convert-time-milliseconds-to-hours-min-sec-format-in-javascript
 		var seconds = (millisec / 1000).toFixed(0);
@@ -462,19 +520,47 @@ module.exports = function (clientOriginal, options) {
 
 	music.skip = (message, suffix) => {
 		try {
-			const args = message.content.split(' ').slice(1)
+			const args = parseInt(message.content.split(' ').slice(1)[0]);
 			const player = bot.player.get(message.guild.id);
 			if(!player)
 				return message.channel.send(`No music playing!`);
 			const queue = music.getQueue(message.guild.id);
 			let sum = 1;
-			if(!isNaN(args) && parseInt(args.join(" ")) > 0) {
-				sum = parseInt(args.join(" "))
-			};
+
+			if(args && !isNaN(args))
+				sum = args;
+
 			sum = Math.min(sum, queue.length);
+
 			queue.splice(0, sum);
+
 			message.channel.send(`Skipped ${sum} songs!`);
-			player.emit('end', message);
+			if(player.paused)
+				player.resume();
+			//player.emit('end', message);
+			player.stop();
+		} catch (err) {
+			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``);
+		}
+	}
+
+	music.volume = async (message, suffix) => {
+		try {
+			const args = message.content.split(' ').slice(1)[0];
+			const player = bot.player.get(message.guild.id);
+			if(!player)
+				return message.channel.send("No music playing!");
+
+			if(isNaN(args))
+				return message.channel.send(`Volume specified is not a number!`);
+
+			const volume = parseInt(args);
+			if(volume < 0 || volume > 100) 
+				return message.channel.send(`Volume can't be below 0 or above 100!`);
+
+			player.volume(volume);
+
+			message.channel.send(`Set the volume to ${volume}!`);
 		} catch (err) {
 			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``);
 		}
