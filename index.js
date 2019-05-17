@@ -20,7 +20,11 @@ const Discord = require('discord.js');
 const PACKAGE = require('./package.json');
 const Lavalink = require('discord.js-lavalink');
 const { PlayerManager } = Lavalink;
-const snekfetch = require('snekfetch');
+const axios = require('axios');
+try {
+	if(!Discord.RichEmbed)
+		Discord.RichEmbed = Discord.MessageEmbed;
+} catch(err) {}
 
 const defaultRegions = {
     asia: ["sydney", "singapore", "japan", "hongkong"],
@@ -28,11 +32,11 @@ const defaultRegions = {
     us: ["us-central", "us-west", "us-east", "us-south", "brazil"]
 };
 
-let currentTrack = null;
+let currentTrack = {};
 
-module.exports = function (clientOriginal, options) {
+module.exports = function (client, options) {
 	class LavalinkMusic { // Construct everything?
-		constructor(clientOriginal, options) {
+		constructor(client, options) {
 			this.prefix = (options && options.prefix) || '!';
 			this.queues = {};
 			this.loops = {};
@@ -40,14 +44,16 @@ module.exports = function (clientOriginal, options) {
 			this.lavalink = (options && options.lavalink) || {
 				restnode: {
 					host: "localhost",
-					port: 2333,
-					password: "b1nzyR8l1m1t5"
+					port: 8643,
+					password: "youshallnotpass"
 				},
 				nodes: [
-					{ host: "localhost", port: 2333, region: "asia", password: "b1nzyR8l1m1t5" }
-				],
+					{ host: "localhost", port: 8643, region: "asia", password: "youshallnotpass" }
+				]
 			};
-			this.token = (options && options.token);
+
+			client.player = null;
+			//this.token = (options && options.token);
 
 			// Commands
 
@@ -65,16 +71,17 @@ module.exports = function (clientOriginal, options) {
 			// Sorry for the puns btw
 
 
-			this.customGame = (options && options.customGame) || { name: '', type: 'PLAYING' };
+			this.customGame = (options && options.customGame && options.customGame.type.toUpperCase()) || { name: '', type: 'PLAYING' };
 			this.logging = (options && options.logging) || false;
+			//this.runLavalink = (options && options.runLavalink) || false;
 		}
 		
 	}
 	
-	var music = new LavalinkMusic(clientOriginal, options);
+	var music = new LavalinkMusic(client, options);
 	var musicbot = music;
 	
-	class MusicClient extends Discord.Client { // Music client setup, sidenote this isn't my code once again.
+	/*class MusicClient extends Discord.Client { // Music client setup, sidenote this isn't my code once again.
 
 		constructor(options) {
 			super(options);
@@ -83,16 +90,26 @@ module.exports = function (clientOriginal, options) {
 
 		}
 
-	}
+	}*/
+
+	process.on('unhandledRejection', (reason) => {
+		console.error(`[discord.js-lavalink-musicbot] Caught unhandled rejection: ${reason.stack}\nIf this is causing issues, head to the support server at https://discord.gg/dNN4azK`);
+	});
+
+	process.on('uncaughtException', (err) => {
+		console.error(`[discord.js-lavalink-musicbot] Uncaught Exception - ${err.stack}\n\nIf this is causing issues, head to the support server at https://discord.gg/dNN4azK`);
+	});
 	
-	var client = new MusicClient();
-	client.login(music.token); // Relogin the bot just for the Lavalink thing.
+	//var client = new MusicClient();
+	//client.login(music.token); // Relogin the bot just for the Lavalink thing.
 
 	async function returnErr(objName, objType) {
-		// Since I was getting fucking lazy, I decided to make this.
+		// Since I was getting lazy, I decided to make this.
 		console.log(new TypeError(`"${objName}" must be equivelent to type "${objType}"`));
 		process.exit(1);
 	}
+
+	let isLavalinkDone = false;
 	
 	async function startBot() { // Start the damn bot.
 		if (process.version.slice(1)
@@ -101,10 +118,10 @@ module.exports = function (clientOriginal, options) {
 			process.exit(1);
 		}
 		
-		if(Discord.version.split('.')[0] > 12) {
+		/*if(Discord.version.split('.')[0] > 12) {
 			console.log(new Error(`[LavalinkMusicBot] Discord.JS version 12 and above is currently unsupported! Please use an older version!`));
 			process.exit(1);
-		}
+		}*/
 	
 		if (typeof music.admins !== 'object') {
 			console.log(new TypeError(`"admins" must be an object (array)`));
@@ -161,10 +178,10 @@ module.exports = function (clientOriginal, options) {
 			process.exit(1);
 		}
 
-		if(!music.token) {
+		/*if(!music.token) {
 			console.log(new TypeError('You require to add the token!'));
 			process.exit(1);
-		}
+		}*/
 
 		if(typeof music.customGame !== 'object') {
 			returnErr('customGame', 'object');
@@ -178,11 +195,45 @@ module.exports = function (clientOriginal, options) {
 			returnErr('customGame.type', 'string');
 		}
 
-		const custo = music.customGame.type;
+		/*const custo = music.customGame.type;
 		if(custo !== 'PLAYING' && custo !== 'STREAMING' && custo !== 'LISTENING' && custo !== 'WATCHING') {
 			console.log(new TypeError(`"customGame.type" must be "PLAYING", "STREAMING', "LISTENING" or "WATCHING"! And also must be all uppercase!`));
 			process.exit(1);
+	}*//*
+		if(typeof music.runLavalink !== 'boolean') {
+			returnErr('music.runLavalink', 'boolean');
 		}
+		
+		if(music.runLavalink) {
+			const child_process = require('child_process');
+			console.log(`[Lavalink] Starting Lavalink...`);
+			const lavalink = child_process.spawn(`java`,['-jar','Lavalink/Lavalink.jar', '-Xmx512M']); /*(err, stdout, stderr) => {
+				if(err)
+					console.error(`[Lavalink] Error creating Lavalink child process! ${err.stack}\Head to the support server at https://discord.gg/dNN4azK for assistance!`) && process.exit(1);
+
+				if(stderr)
+					console.error(`[Lavalink] Received Lavalink stderr - ${stderr}\Head to the support server at https://discord.gg/dNN4azK for assistance if this is causing issues!`);
+
+				console.log(`[Lavalink] Lavalink started!`);
+				isLavalinkDone = true;
+			});*//*
+
+			lavalink.on('message', (data) => {
+				console.log(`[Lavalink] ${data}`);
+				isLavalinkDone = true;
+			});
+			lavalink.stdout.on('data', (data) => {
+				//console.log(`[Lavalink stdout] ${data}`);
+				if(data.includes('Started Launcher in') && !client.player) {
+					isLavalinkDone = true;
+					client.player = new PlayerManager(client, music.lavalink.nodes, {
+						user: client.user.id,
+						shards: (client.shard && client.shard.count) || 1
+					});
+					console.log(`[Lavalink] Finished loading!`);
+				}
+			});
+		}*/
 	}
 	startBot();
 	
@@ -224,10 +275,10 @@ module.exports = function (clientOriginal, options) {
 		}
 	})
 	.on('ready', async () => { // Once the bot is ready, this starts.
-		client.player = new PlayerManager(client, music.lavalink.nodes, {
-			user: client.user.id,
-			shards: music.getShard()
-		});
+			client.player = new PlayerManager(client, music.lavalink.nodes, {
+				user: client.user.id,
+				shards: (client.shard && client.shard.count) || 1
+			});
 		console.log(`[LavalinkMusic] Running version ${PACKAGE.version}`);
 		console.log(`[LavalinkMusic] Running NodeJS ${process.version}`);
 		console.log(`[LavalinkMusic] Running Discord.JS ${Discord.version}`);
@@ -235,10 +286,10 @@ module.exports = function (clientOriginal, options) {
 		console.log(`[LavalinkMusic] Listening to host ${music.lavalink.restnode.host} and port ${music.lavalink.restnode.port}`);
 		console.log(`[LavalinkMusic] Prefix: ${music.prefix}`);
 		if(music.customGame.type == 'STREAMING') {
-			client.user.setPresence({ game: { name: music.customGame.name, type: 'STREAMING', url: 'https://twitch.tv/monstercat'}});
+			client.user.setPresence({ activity: { name: music.customGame.name, type: 'STREAMING', url: 'https://twitch.tv/monstercat'}});
 		} else {
 			if(music.customGame.name == '') return;
-			client.user.setPresence({ game: music.customGame });
+			client.user.setPresence({ activity: music.customGame });
 		}
 	});
 
@@ -283,32 +334,32 @@ module.exports = function (clientOriginal, options) {
         }, { selfdeaf: true });
 		if (!player) return message.channel.send("You need to be in a voice channel!")
 		
+		const queue = music.getQueue(message.guild.id);
 		if(bot.player.get(message.guild.id).paused == true) music.resume(message, suffix);
 
 		if(['https://', 'http://'].some(crx => args.join(' ').includes(crx))) {
-			const queue = music.getQueue(message.guild.id);
 			await music.getSong(args.join(' '))
 			.then(song => {
 			if(args.join(' ').includes('&list=')) {
 				const urlParams = new URLSearchParams(args.join(' '));
 				const myParam = urlParams.get('index');
 				
-				let cur = urlParams.get('index') || 1;
+				let cur = urlParams.get('index') || 0;
 				const embed = new Discord.RichEmbed()
 			.setColor([255, 69, 0])
 			.setAuthor(`Play Command`, bot.user.avatarURL)
 			.setTitle('Added to queue!')
-			.setDescription(`• **Title**: ${song.tracks[cur - 1].info.title}
-• **Author**: ${song.tracks[cur - 1].info.author}
-• **URL**: [${song.tracks[cur - 1].info.uri}](${song.tracks[cur - 1].info.uri})
-• **Length**: ${music.getYTLength(song.tracks[cur - 1].info.length)}
+			.setDescription(`• **Title**: ${song.tracks[0].info.title}
+• **Author**: ${song.tracks[0].info.author}
+• **URL**: [${song.tracks[0].info.uri}](${song.tracks[0].info.uri})
+• **Length**: ${music.getYTLength(song.tracks[0].info.length)}
 		`).setFooter(`Module: discord.js-lavalink-musicbot`)
 			message.channel.send(embed);
 				song.tracks.map(cr => {
-					if(song.tracks[cur - 1] == undefined || song.tracks[cur] == undefined)
+					if(song.tracks[cur - 1] == undefined && song.tracks[0] == undefined)
 						return;
-					queue.push(song.tracks[cur - 1]);
-					music.log(`Added track "${song.tracks[cur - 1].info.title}" in server ${message.guild.name}`, 'ADDTRK-PLAYLIST');
+					queue.push(song.tracks[0]);
+					music.log(`Added track "${song.tracks[0].info.title}" in server ${message.guild.name}`, 'ADDTRK-PLAYLIST');
 					cur++;
 				});
 
@@ -327,7 +378,11 @@ module.exports = function (clientOriginal, options) {
 				music.log(`Added track "${song.tracks[0].info.title}" in server ${message.guild.name}`, 'ADDTRK');
 			}
 
-			if(queue[0].track !== currentTrack) music.execQueue(message, queue, player);
+			//console.log(queue);
+			if(queue[0].track !== currentTrack[message.guild.id]) music.execQueue(message, queue, player);
+		})
+		.catch(err => {
+			console.error(err.stack);
 		});
 		} else {
 			const queue = music.getQueue(message.guild.id);
@@ -369,16 +424,18 @@ module.exports = function (clientOriginal, options) {
 	
 	music.getSong = async (string) => {
 		// This is not my code.
-		const res = await snekfetch.get(`http://${music.lavalink.restnode.host}:${music.lavalink.restnode.port}/loadtracks`)
-			.query({ identifier: string })
-			.set("Authorization", music.lavalink.restnode.password)
+		return new Promise(async (resolve, reject) => {
+			const res = await axios.get(`http://${music.lavalink.restnode.host}:${music.lavalink.restnode.port}/loadtracks?identifier=${string}`, {headers: {Authorization: music.lavalink.restnode.password}})
 			.catch(err => {
-				console.error(err);
-				return null;
+				console.error(err.stack);
+				reject(null);
 			});
-		if (!res) return "User doesn't exist!";
+			if (!res.data) reject("User doesn't exist!");
 
-		return res.body;
+			//console.log(res.data);
+
+			resolve(res.data);
+		});
 	}
 	
 	music.execQueue = async (message, queue, player, type = 0) => {
@@ -386,7 +443,7 @@ module.exports = function (clientOriginal, options) {
 		if(queue[0] == undefined) {
 			message.channel.send(`Queue seems to be empty... Weird. Time to leave the VC!`);
 			await bot.player.leave(message.guild.id);
-			currentTrack = null;
+			delete currentTrack[message.guild.id];
 		} else {
 		player.play(queue[0].track); // Plays the first item in the queue.
 		const embed = new Discord.RichEmbed()
@@ -399,7 +456,7 @@ module.exports = function (clientOriginal, options) {
 • **Length**: ${music.getYTLength(queue[0].info.length)}
 				`).setFooter(`Module: discord.js-lavalink-musicbot`)
 		message.channel.send(embed);
-		currentTrack = queue[0].track;
+		currentTrack[message.guild.id] = queue[0].track;
 
 		player.once("end", async data => {
 			if(queue.length > 0) { // So, if there's more than one item in the queue, play the new item.
@@ -411,7 +468,7 @@ module.exports = function (clientOriginal, options) {
 				queue.shift(); 
 				message.channel.send(`Queue is now empty! Leaving voice channel...`)
 				await bot.player.leave(message.guild.id);
-				currentTrack = null;
+				delete currentTrack[message.guild.id];
 			}
 		});
 	}
@@ -436,13 +493,14 @@ module.exports = function (clientOriginal, options) {
 		return minutes + ":" + seconds;
 	}
 	
-	music.getShard = () => { // This should supposedly return the shard.
-		let shardin = Math.floor(clientOriginal.guilds.size / 2500);
+	/*music.getShard = () => { // This should supposedly return the shard.
+		let shardin = Math.floor(client.guilds.size / 1000);
 		if(!shardin || shardin == null || shardin == 0)
 			shardin = 1;
 		
+		music.log(`Detected ${shardin} shards`);
 		return shardin;
-	}
+	}*/
 	
 	music.np = async (message, suffix) => {
 		try {
@@ -551,10 +609,10 @@ module.exports = function (clientOriginal, options) {
 			if(!player)
 				return message.channel.send("No music playing!");
 
-			if(isNaN(args))
-				return message.channel.send(`Volume specified is not a number!`);
+			/*if(isNaN(args))
+				return message.channel.send(`Volume specified is not a number!`);*/
 
-			const volume = parseInt(args);
+			const volume = parseInt(args) || 50;
 			if(volume < 0 || volume > 100) 
 				return message.channel.send(`Volume can't be below 0 or above 100!`);
 

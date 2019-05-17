@@ -15,7 +15,8 @@ If you install the actual module, Lavalink should be provided.
 To install the module, run `npm i -s discord.js-lavalink-musicbot`
 
 # Notice
-If you use Glitch, make sure you set the port to 3000 for both the application.yml and the configuration in the "lavalink" area, because Glitch only works on that port.
+~~If you use Glitch, make sure you set the port to 3000 for both the application.yml and the configuration in the "lavalink" area, because Glitch only works on that port.~~
+You are unable to use Glitch if you want to use this module, because Lavalink requires an insane amount of memory/RAM (approximately 500-600 MB) to run due to Java. Unfortunately, due to Glitch being limited to 512 MB of memory/RAM, this means you are unable to run Lavalink.
 
 # Setup example
 ```javascript
@@ -26,23 +27,23 @@ const music = new Music(bot, {
 	lavalink: {
 		"restnode": {
 			"host": "localhost",
-			"port": 2333,
-			"password":"b1nzyR8l1m1t5"
+			"port": 8643,
+			"password":"youshallnotpass"
 		},
 		"nodes": [
-			{ "host": "localhost", "port": 2333, "region": "asia", "password": "b1nzyR8l1m1t5" }
-		],
+			{ "host": "localhost", "port": 8643, "region": "asia", "password": "youshallnotpass" }
+		]
 	},
-	admins: ["455346525716086795"],
-	token: "bot token here"
+	admins: ["455346525716086795"]
 });
+
+bot.login('bot token here');
 ```
 
 # Options
 
 | Option | Type | Required? | Description | Default
 | --- | --- | --- | --- | --- |
-| token | String | yes | Required for the bot to log in. Get a token from [here](https://twentysix26.github.io/Red-Docs/red_guide_bot_accounts/#creating-a-new-bot-account) | None |
 | prefix | String | no | Shows what you want your bot to respond to. | ! |
 | helpCmd | String | no | What should the help command be. | mhelp |
 | playCmd | String | no | What should the play command be. | play |
@@ -58,6 +59,12 @@ const music = new Music(bot, {
 | lavalink | Object | yes, if you changed the default Lavalink settings | Lavalink settings! | (Check in the example) | 
 
 # Changelog (only for v0.0.7 and later)
+v0.0.8
+---
+- Switched from [snekfetch](https://npmjs.com/package/snekfetch) to [axios](https://npmjs.com/package/axios)
+- Reconfigured the module to no longer require a token to use.
+- Added discord.js v12 support (presumably)
+
 v0.0.7
 ---
 - Added volume command
