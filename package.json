@@ -31,9 +31,9 @@
   },
   "bundleDependencies": [],
   "dependencies": {
-    "axios": "^0.18.0",
-    "discord.js": "^11.5.0",
-    "discord.js-lavalink": "^2.2.2"
+    "axios": "^0.19.0",
+    "discord.js": "^11.5.1",
+    "discord.js-lavalink": "^2.2.3"
   },
   "deprecated": false,
   "description": "A discord.js music bot module based on DarkoPendragon and nexu-dev's discord.js-musicbot-addon module, except using Lavalink.",
@@ -55,5 +55,5 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "0.0.8"
+  "version": "0.0.9"
 }

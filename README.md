@@ -15,15 +15,15 @@ If you install the actual module, Lavalink should be provided.
 To install the module, run `npm i -s discord.js-lavalink-musicbot`
 
 # Notice
-~~If you use Glitch, make sure you set the port to 3000 for both the application.yml and the configuration in the "lavalink" area, because Glitch only works on that port.~~
-You are unable to use Glitch if you want to use this module, because Lavalink requires an insane amount of memory/RAM (approximately 500-600 MB) to run due to Java. Unfortunately, due to Glitch being limited to 512 MB of memory/RAM, this means you are unable to run Lavalink.
+If you use Glitch, make sure you set the port to 3000 for both the application.yml and the configuration in the "lavalink" area, because Glitch only works on that port.<br>
+Make sure you use a completely separate Glitch project for Lavalink.<br>
+Also please remember to limit the memory usage. That's all I'm telling you :)
 
 # Setup example
 ```javascript
 const Discord = require('discord.js');
 const bot = new Discord.Client();
-const Music = require('discord.js-lavalink-musicbot');
-const music = new Music(bot, {
+bot.music = new (require('discord.js-lavalink-musicbot'))(bot, {
 	lavalink: {
 		"restnode": {
 			"host": "localhost",
@@ -54,11 +54,20 @@ bot.login('bot token here');
 | skipCmd | String | no | What should the skip command be. | skip |
 | volumeCmd | String | no | What should the volume command be. | volume |
 | resumeCmd | String | no | What should the resume command be. | resume |
+| loopCmd | String | no | What should the loop command be. | loop |
 | admins | Array | no | Who are the admins? | [] |
 | customGame | Object | no | Set the custom game! | { name: '', type: 'PLAYING' } |
 | lavalink | Object | yes, if you changed the default Lavalink settings | Lavalink settings! | (Check in the example) | 
 
 # Changelog (only for v0.0.7 and later)
+v0.0.9
+---
+- Fixed queue being undefined in execQueue (wow I never noticed that, thanks Discord server!)
+- Added loop and seek command.
+- Updated all dependencies.
+- Reconfigure for better connecting if host doesn't give port. (example: localhost:8538 -> 154.76.225.18/lavalink.djsl-host.com) by adding an address config. You're welcome.
+- Updated literally everything to run better. Hopefully.
+
 v0.0.8
 ---
 - Switched from [snekfetch](https://npmjs.com/package/snekfetch) to [axios](https://npmjs.com/package/axios)

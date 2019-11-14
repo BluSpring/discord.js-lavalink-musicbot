@@ -12,8 +12,7 @@ const music = new Music(bot, {
 			{ "host": "localhost", "port": 8643, "region": "asia", "password": "youshallnotpass" }
 		]
 	},
-	admins: ["455346525716086795"],
-    runLavalink: true
+	admins: ["455346525716086795"]
 });
 
 bot.login("TR0_L0-LOLOLOLOL0-l0l0l0l0");

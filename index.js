@@ -4,9 +4,6 @@
 	
 	Lavalink has also been included in this module's folder along with its settings.
 	
-	You require to manually run it due to me not being sure if this laptop can necessarily handle Lavalink.
-	Damn ASUS EeePCs and Intel Atoms...
-	
 	You also don't require to add the Lavalink config into the options due to it already being included
 	in the module, unless you changed its settings.
 	
@@ -22,7 +19,7 @@ const Lavalink = require('discord.js-lavalink');
 const { PlayerManager } = Lavalink;
 const axios = require('axios');
 try {
-	if(!Discord.RichEmbed)
+	if(!Discord.RichEmbed && Discord.version.split('.')[0] == '12')
 		Discord.RichEmbed = Discord.MessageEmbed;
 } catch(err) {}
 
@@ -32,11 +29,11 @@ const defaultRegions = {
     us: ["us-central", "us-west", "us-east", "us-south", "brazil"]
 };
 
-let currentTrack = {};
+//let currentTrack = {}; // wtf did I even use this for
 
 module.exports = function (client, options) {
 	class LavalinkMusic { // Construct everything?
-		constructor(client, options) {
+		constructor(clientt, options) {
 			this.prefix = (options && options.prefix) || '!';
 			this.queues = {};
 			this.loops = {};
@@ -51,8 +48,9 @@ module.exports = function (client, options) {
 					{ host: "localhost", port: 8643, region: "asia", password: "youshallnotpass" }
 				]
 			};
+			this.package = PACKAGE;
 
-			client.player = null;
+			clientt.player = null;
 			//this.token = (options && options.token);
 
 			// Commands
@@ -68,6 +66,8 @@ module.exports = function (client, options) {
 			this.pauseCmd = (options && options.pauseCmd) || 'pause'; // Pause that! *moves the girl's boyfriend into the trash*
 			this.resumeCmd = (options && options.resumeCmd) || 'resume'; // Resume! Heeeey, gorgeous- *gets bitch slapped*
 			this.volumeCmd = (options && options.volumeCmd) || 'volume'; // *EARRAPE*
+			this.seekCmd = (options && options.seekCmd) || 'seek'; // I seek a person.
+			this.loopCmd = (options && options.loopCmd) || 'loop'; // Loops. I'm out of terrible puns.
 			// Sorry for the puns btw
 
 
@@ -105,7 +105,7 @@ module.exports = function (client, options) {
 
 	async function returnErr(objName, objType) {
 		// Since I was getting lazy, I decided to make this.
-		console.log(new TypeError(`"${objName}" must be equivelent to type "${objType}"`));
+		console.log(new TypeError(`"${objName}" must be equivalent to type "${objType}"`));
 		process.exit(1);
 	}
 
@@ -165,6 +165,14 @@ module.exports = function (client, options) {
 
 		if(typeof music.volumeCmd !== 'string') {
 			returnErr('volumeCmd', 'string');
+		}
+
+		if(typeof music.loopCmd !== 'string') {
+			returnErr('loopCmd', 'string');
+		}
+
+		if(typeof music.seekCmd !== 'string') {
+			returnErr('seekCmd', 'string');
 		}
 		
 		
@@ -243,12 +251,13 @@ module.exports = function (client, options) {
 	client.on('message', async message => { // Triggered on a message.
 		const msg = message.content.trim();
 		const command = msg.substring(music.prefix.length).split(/[ \n]/)[0].toLowerCase().trim();
-		const suffix = msg.substring(music.prefix.length + command.length).trim();
+		const suffix = msg.substring(music.prefix.length + command.length).trim().split(' ');
 
 		try {
-		
 			if(msg.toLowerCase().startsWith(music.prefix.toLowerCase())) {
 				switch(command) { // I'm copy pasting code. I don't actually understand how this works.
+					// A year or two later, nevermind, I understand now.
+					// It's basically a shorter if...else statement kinda thing.
 					case music.helpCmd:
 						return music.help(message, suffix);
 					case music.playCmd:
@@ -267,6 +276,10 @@ module.exports = function (client, options) {
 						return music.resume(message, suffix);
 					case music.volumeCmd:
 						return music.volume(message, suffix);
+					case music.seekCmd:
+						return music.seek(message, suffix);
+					case music.loopCmd:
+						return music.loop(message, suffix);
 				}
 			}
 		} catch (err) {
@@ -275,15 +288,15 @@ module.exports = function (client, options) {
 		}
 	})
 	.on('ready', async () => { // Once the bot is ready, this starts.
-			client.player = new PlayerManager(client, music.lavalink.nodes, {
-				user: client.user.id,
-				shards: (client.shard && client.shard.count) || 1
-			});
-		console.log(`[LavalinkMusic] Running version ${PACKAGE.version}`);
+		client.player = new PlayerManager(client, music.lavalink.nodes, {
+			user: client.user.id,
+			shards: (client.shard && client.shard.count) || 1
+		});
+		console.log(`[LavalinkMusic] Running discord.js-lavalink-musicbot v${PACKAGE.version}`);
 		console.log(`[LavalinkMusic] Running NodeJS ${process.version}`);
-		console.log(`[LavalinkMusic] Running Discord.JS ${Discord.version}`);
+		console.log(`[LavalinkMusic] Running Discord.JS v${Discord.version}`);
 		console.log(`[LavalinkMusic] Logged in as ${bot.user.tag} (ID ${bot.user.id})`);
-		console.log(`[LavalinkMusic] Listening to host ${music.lavalink.restnode.host} and port ${music.lavalink.restnode.port}`);
+		console.log(`[LavalinkMusic] Listening to REST node host ${music.lavalink.restnode.host} and port ${music.lavalink.restnode.port}`);
 		console.log(`[LavalinkMusic] Prefix: ${music.prefix}`);
 		if(music.customGame.type == 'STREAMING') {
 			client.user.setPresence({ activity: { name: music.customGame.name, type: 'STREAMING', url: 'https://twitch.tv/monstercat'}});
@@ -312,6 +325,8 @@ module.exports = function (client, options) {
 "${music.prefix}${music.pauseCmd}" - Pauses the queue!
 "${music.prefix}${music.resumeCmd}" - Resumes the queue!
 "${music.prefix}${music.volumeCmd}" - Change the volume!
+"${music.prefix}${music.loopCmd}" - Loops the queue!
+"${music.prefix}${music.seekCmd}" - Seeks through the queue!
 		`)
 		.setAuthor(`${message.author.tag}`, message.author.avatarURL)
 		.setFooter(`Module: discord.js-lavalink-musicbot`)
@@ -324,7 +339,7 @@ module.exports = function (client, options) {
 	}
 	
 	music.play = async (message, suffix) => { // Not willing to add notes here. Lazy.
-		const args = message.content.split(' ').slice(music.prefix.split(' ').length);
+		/*const args = message.content.split(' ').slice(music.prefix.split(' ').length);
 		if(!args[0]) return message.channel.send('No arguments defined!')
 
         const player = await bot.player.join({
@@ -400,6 +415,61 @@ module.exports = function (client, options) {
 			message.channel.send(embed);
 			music.log(`Added track "${song.tracks[0].info.title}" in server ${message.guild.name}`, 'ADDTRK');
 			if(queue.length === 1) music.execQueue(message, queue, player);
+		}*/
+		const msg = message;
+		const betterArgs = suffix.join(' ').trim();
+		let canPlay = false;
+		await message.channel.send(`Hold on...`);
+		if(bot.player.get(message.guild.id) && bot.player.get(message.guild.id).paused) music.resume(message, suffix);
+		if (!msg.member.voiceChannelID)
+			return message.channel.send(`You're not in a voice channel!`);
+
+		if (bot.player.get(message.guild.id) && msg.member.voiceChannelID !== bot.player.get(message.guild.id).channel)
+			return message.channel.send(`You're not in the playing voice channel!`);
+
+		if (!betterArgs && !bot.player.get(message.guild.id))
+			return message.channel.send(`You didn't give anything to play!`);
+
+		var queue = music.getQueue(message.guild.id);
+		var track = await music.getSong(betterArgs.startsWith(`http`) ? betterArgs : `ytsearch:${betterArgs}`);
+		if (track instanceof Error)
+			return message.channel.send(`Track search failed with error \n\`\`\`xl\n${track.toString()}\n\`\`\``);
+		const urlParams = new URLSearchParams(suffix.join(' '));
+		const myParam = parseInt(urlParams.get('index'));
+		if (!track[0]) return message.channel.send(`No results found.`);
+		if (!queue[0]) canPlay = true;
+		if (urlParams.get('list') && myParam) {
+			track = track.splice(myParam - 1, track.length);
+			track.forEach((cr) => {
+				queue.push(cr);
+			});
+		} else if (urlParams.get('list')) {
+			track.forEach((cr) => {
+				queue.push(cr);
+			});
+		} else {
+			queue.push(track[0]);
+		}
+
+		message.channel.send(`:musical_note: Added ${urlParams.get('list') ? "playlist" : "song"} to queue!`, new Discord.RichEmbed()
+			.setColor("RED")
+			.setTitle(track[0].info.title)
+			.setThumbnail(`https://i.ytimg.com/vi/${track[0].info.identifier}/hqdefault.jpg`)
+			.setDescription(`
+• **Author**: ${track[0].info.author}
+• **URL**: [${track[0].info.uri}](${track[0].info.uri})
+• **Length**: ${music.getYTLength(track[0].info.length)}
+		`));
+
+		if (canPlay) {
+			var theHost = music.getIdealHost(bot, message.guild.region);
+			const player = await bot.player.join({
+				guild: message.guild.id,
+				channel: message.member.voiceChannelID,
+				host: theHost
+			});
+			bot.player.get(message.guild.id).node = bot.player.nodes.get(theHost);
+			music.execQueue(message, queue, player);
 		}
 	}
 	
@@ -424,7 +494,7 @@ module.exports = function (client, options) {
 	
 	music.getSong = async (string) => {
 		// This is not my code.
-		return new Promise(async (resolve, reject) => {
+		/*return new Promise(async (resolve, reject) => {
 			const res = await axios.get(`http://${music.lavalink.restnode.host}:${music.lavalink.restnode.port}/loadtracks?identifier=${string}`, {headers: {Authorization: music.lavalink.restnode.password}})
 			.catch(err => {
 				console.error(err.stack);
@@ -435,18 +505,37 @@ module.exports = function (client, options) {
 			//console.log(res.data);
 
 			resolve(res.data);
+		});*/
+
+		// THIS is my code
+		// See I learned, are you proud of me?
+		return new Promise(async(resolve, rej) => {
+			try {
+				const res = await axios.get(`${music.lavalink.restnode.address ? music.lavalink.restnode.address : `https://${music.lavalink.restnode.host}:${music.lavalink.restnode.port}`}/loadtracks?identifier=${encodeURIComponent(string)}`, {
+					headers: {
+						Authorization: music.lavalink.restnode.password
+					}
+				});
+				resolve(res.data.tracks);
+			} catch (e) {
+				//message.channel.send(`Track not found.`);
+				resolve(e); // I know this makes no sense shush
+			}
 		});
 	}
 	
-	music.execQueue = async (message, queue, player, type = 0) => {
+	music.execQueue = async (message, queue, player) => {
+
+		// This is old af
+
 		//console.log(queue[0]);
-		if(queue[0] == undefined) {
+		/*if(queue[0] == undefined) {
 			message.channel.send(`Queue seems to be empty... Weird. Time to leave the VC!`);
 			await bot.player.leave(message.guild.id);
 			delete currentTrack[message.guild.id];
 		} else {
-		player.play(queue[0].track); // Plays the first item in the queue.
-		const embed = new Discord.RichEmbed()
+			player.play(queue[0].track); // Plays the first item in the queue.
+			const embed = new Discord.RichEmbed()
 				.setColor([255, 69, 0])
 				.setAuthor(`Music`, bot.user.avatarURL)
 				.setTitle('Now playing new song!')
@@ -458,21 +547,46 @@ module.exports = function (client, options) {
 		message.channel.send(embed);
 		currentTrack[message.guild.id] = queue[0].track;
 
-		player.once("end", async data => {
-			if(queue.length > 0) { // So, if there's more than one item in the queue, play the new item.
+			player.once("end", async data => {
+				if(queue.length > 0) { // So, if there's more than one item in the queue, play the new item.
+					setTimeout(() => {
+						queue.shift(); // Switch songs.
+						music.execQueue(message, queue, player);
+					}, 1000) // Wait a second.	
+				} else { // If not, just stop the queue and leave.
+					queue.shift(); 
+					message.channel.send(`Queue is now empty! Leaving voice channel...`)
+					await bot.player.leave(message.guild.id);
+					delete currentTrack[message.guild.id];
+				}
+			});
+		}*/
+
+		// Here's some better code :D
+
+		player.play(queue[0].track);
+		message.channel.send(`Now playing **${queue[0].info.title}**`);
+		  
+		player.once('end', async () => {
+			if(!music.loops[message.guild.id] || music.loops[message.guild.id] == 0)
+				queue.shift();
+			else if(music.loops[message.guild.id] == 2) {
+				queue.push(queue[0]);
+				queue.shift();
+			}
+			if(queue.length > 0) {
 				setTimeout(() => {
-					queue.shift(); // Switch songs.
 					music.execQueue(message, queue, player);
-				}, 1000) // Wait a second.	
-			} else { // If not, just stop the queue and leave.
-				queue.shift(); 
-				message.channel.send(`Queue is now empty! Leaving voice channel...`)
-				await bot.player.leave(message.guild.id);
-				delete currentTrack[message.guild.id];
+				}, 1000);
+			} else {
+				message.channel.send(`Queue is now empty! Leaving the voice channel.`);
+				await client.player.leave(message.guild.id);
+				delete music.queues[message.guild.id];
+				if(music.loops[message.guild.id])
+					delete music.loops[message.guild.id];
 			}
 		});
 	}
-		}
 	music.getYTLength = (millisec) => {
     // Credit: https://stackoverflow.com/questions/19700283/how-to-convert-time-milliseconds-to-hours-min-sec-format-in-javascript
 		var seconds = (millisec / 1000).toFixed(0);
@@ -493,6 +607,8 @@ module.exports = function (client, options) {
 		return minutes + ":" + seconds;
 	}
 	
+
+	// Looking back, why the fuck did I use this
 	/*music.getShard = () => { // This should supposedly return the shard.
 		let shardin = Math.floor(client.guilds.size / 1000);
 		if(!shardin || shardin == null || shardin == 0)
@@ -518,7 +634,7 @@ module.exports = function (client, options) {
 • **Author**: ${queue[0].info.author}
 • **URL**: [${queue[0].info.uri}](${queue[0].info.uri})
 • **Length**: ${music.getYTLength(queue[0].info.length)}
-				`).setFooter(`Module: discord.js-lavalink-musicbot`)
+				`);
 		message.channel.send(embed);
 		} catch (err) {
 			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``)
@@ -578,7 +694,7 @@ module.exports = function (client, options) {
 
 	music.skip = (message, suffix) => {
 		try {
-			const args = parseInt(message.content.split(' ').slice(1)[0]);
+			/*const args = parseInt(message.content.split(' ').slice(1)[0]);
 			const player = bot.player.get(message.guild.id);
 			if(!player)
 				return message.channel.send(`No music playing!`);
@@ -596,7 +712,24 @@ module.exports = function (client, options) {
 			if(player.paused)
 				player.resume();
 			//player.emit('end', message);
-			player.stop();
+			player.stop();*/
+
+			const msg = message;
+			if(!msg.member.voiceChannelID)
+				return message.channel.send(`You're not in a voice channel!`);
+
+			if(bot.player.get(message.guild.id) && msg.member.voiceChannelID !== bot.player.get(message.guild.id).channel)
+				return message.channel.send(`You're not in the playing voice channel!`);
+			var queue = music.getQueue(message.guild.id);
+			if(!queue || queue.length == 0)
+				return message.channel.send(`No music is playing!`);
+			let howMany = 1;
+			if(suffix[0])
+				howMany = Math.min(parseInt(suffix[0]), queue.length);
+
+			queue.splice(0, howMany - 1);
+			message.channel.send(`Skipped ${howMany} songs.`);
+			client.player.get(message.guild.id).stop();
 		} catch (err) {
 			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``);
 		}
@@ -604,7 +737,6 @@ module.exports = function (client, options) {
 
 	music.volume = async (message, suffix) => {
 		try {
-			const args = message.content.split(' ').slice(1)[0];
 			const player = bot.player.get(message.guild.id);
 			if(!player)
 				return message.channel.send("No music playing!");
@@ -612,8 +744,8 @@ module.exports = function (client, options) {
 			/*if(isNaN(args))
 				return message.channel.send(`Volume specified is not a number!`);*/
 
-			const volume = parseInt(args) || 50;
-			if(volume < 0 || volume > 100) 
+			const volume = parseInt(suffix[0]) || 50;
+			if(volume < 0 || volume > 100) // Limit the volume cuz fucking hell volume can be high
 				return message.channel.send(`Volume can't be below 0 or above 100!`);
 
 			player.volume(volume);
@@ -622,5 +754,59 @@ module.exports = function (client, options) {
 		} catch (err) {
 			message.channel.send(`Error executing this command! \`\`\`xl\n${err.stack}\n\`\`\``);
 		}
+	}
+
+	music.loop = async (message, args) => {
+		if(!bot.player.get(message.guild.id))
+			return message.channel.send(`Currently not playing anything!`);
+
+		if(!music.loops[message.guild.id])
+			music.loops[message.guild.id] = 0;
+
+		var ms = music.loops[message.guild.id]
+
+		if(!args[0]) {
+			if(ms == 0) {
+				message.channel.send(`Arguments not found. Looping one song only :repeat_one:\n\n**Note**: \`0/off\` is to turn off loop, \`1/one\` is to loop one song, \`2/multi/all\` is to loop the whole queue.`);
+				ms = 1;
+			} else {
+				message.channel.send(`Arguments not found. Loop disabled.\n\n**Note**: \`0/off\` is to turn off loop, \`1/one\` is to loop one song, \`2/multi/all\` is to loop the whole queue.`);
+				ms = 0;
+			}
+		} else {
+			var ar = args[0].toLowerCase();
+			if(ar == '0' || ar == 'off') {
+				ms = 0;
+				message.channel.send(`Loop disabled.`);
+			} else if(ar == '1' || ar == 'one') {
+				ms = 1;
+				message.channel.send(`Loop set to one song. :repeat_one:`);
+			} else if(ar == '2' || ar == 'multi' || ar == 'all') {
+				ms = 2;
+				message.channel.send(`Loop set to multiple songs. :repeat:`);
+			} else {
+				message.channel.send(`Invalid loop type. \n\`0/off\` is to turn off loop, \`1/one\` is to loop one song, \`2/multi/all\` is to loop the whole queue.`);
+			}
+		}
+	}
+
+	music.seek = async (message, args) => {
+		// Thanks to TheChicken14 for the loop code!
+		var queue = music.getQueue(message.guild.id);
+		if(!queue || queue.length == 0)
+			return message.channel.send(`No music is playing!`);
+		
+		if(!message.member.voiceChannelID)
+			return message.channel.send(`You're not in a voice channel!`);
+	
+		if(client.player.get(message.guild.id) && message.member.voiceChannelID !== client.player.get(message.guild.id).channel)
+			return message.channel.send(`You're not in the playing voice channel!`);
+		
+		var pos = args[0] * 1000;
+		if(!pos || pos.length < 1)
+			return message.channel.send(`You must define a position in seconds.`);
+		
+		message.channel.send(`Position set to ${music.getYTLength(pos)}`);
+		client.player.get(message.guild.id).seek(pos);
 	}
 }
