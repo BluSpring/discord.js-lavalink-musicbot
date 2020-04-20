@@ -6,6 +6,12 @@ A Lavalink music bot module based on [DarkoPendragon](https://github.com/DarkoPe
 Please join my Discord server here for assistance with the module: [XeriApps Support](https://discord.gg/dNN4azK)
 [![Discord Server](https://discordapp.com/api/guilds/483203473643405312/embed.png)](https://discord.gg/dNN4azK)
 
+# Prerequisites
+- A Lavalink node.
+- Java 13 (if you don't have one)
+- Node.js 12
+- A brain...
+
 # Usage
 Install [Lavalink](https://ci.fredboat.com/viewLog.html?buildId=lastSuccessful&buildTypeId=Lavalink_Build&tab=artifacts&guest=1). An example
 application.yml is provided in the "Lavalink" folder.
@@ -55,11 +61,19 @@ bot.login('bot token here');
 | volumeCmd | String | no | What should the volume command be. | volume |
 | resumeCmd | String | no | What should the resume command be. | resume |
 | loopCmd | String | no | What should the loop command be. | loop |
-| admins | Array | no | Who are the admins? | [] |
-| customGame | Object | no | Set the custom game! | { name: '', type: 'PLAYING' } |
-| lavalink | Object | yes, if you changed the default Lavalink settings | Lavalink settings! | (Check in the example) | 
+| admins | String[] | no | Who are the admins? | [] |
+| customGame | PresenceData | no | Set the custom game! | { name: '', type: 'PLAYING' } |
+| lavalink | LavalinkOptions | yes, if you changed the default Lavalink settings | Lavalink settings! | (Check in the example) | 
 
 # Changelog (only for v0.0.7 and later)
+v0.1.0
+---
+- Added typings file.
+- Migrated from [discord.js-lavalink](https://npmjs.com/package/discord.js-lavalink) to [Lavacord](https://npmjs.com/package/lavacord)
+- Added .gitignore and .npmignore
+- Modified the README
+- Cleared a lot of the commented code because that used a lot of space
+
 v0.0.9
 ---
 - Fixed queue being undefined in execQueue (wow I never noticed that, thanks Discord server!)
