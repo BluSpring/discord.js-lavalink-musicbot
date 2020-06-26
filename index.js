@@ -25,7 +25,7 @@ try {
 } catch(err) {}
 
 const defaultRegions = {
-    asia: ["sydney", "singapore", "japan", "hongkong"],
+    asia: ["sydney", "singapore", "japan", "hongkong", "southkorea"],
     eu: ["london", "frankfurt", "amsterdam", "russia", "eu-central", "eu-west"],
     us: ["us-central", "us-west", "us-east", "us-south", "brazil"]
 };
