@@ -361,7 +361,7 @@ module.exports = function (client, options) {
 	music.getSong = async (string) => {
 		return new Promise(async(resolve, rej) => {
 			try {
-				const res = await axios.get(`${music.lavalink.restnode.address ? music.lavalink.restnode.address : `https://${music.lavalink.restnode.host}:${music.lavalink.restnode.port}`}/loadtracks?identifier=${encodeURIComponent(string)}`, {
+				const res = await axios.get(`${music.lavalink.restnode.address ? music.lavalink.restnode.address : `http://${music.lavalink.restnode.host}:${music.lavalink.restnode.port}`}/loadtracks?identifier=${encodeURIComponent(string)}`, {
 					headers: {
 						Authorization: music.lavalink.restnode.password
 					}
